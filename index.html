@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF Editor</title>
+    <link rel="stylesheet" href="styles.css?v=7" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">PDF Editor</div>
+
+      <div class="group">
+        <button id="btnOpen" class="primary" title="Open a PDF (replaces the current one)">Open</button>
+        <button id="btnAdd" data-needs-doc title="Append more PDFs (merge)">+ Add PDF</button>
+        <input type="file" id="fileOpen" accept="application/pdf,.pdf" multiple hidden />
+        <input type="file" id="fileAdd" accept="application/pdf,.pdf" multiple hidden />
+      </div>
+
+      <div class="group tools" id="tools">
+        <button data-tool="select" data-needs-doc title="Select / move / resize (V)">Select</button>
+        <button data-tool="edittext" data-needs-doc title="Click existing text in the PDF to change it (E)">Edit text</button>
+        <button data-tool="text" data-needs-doc title="Add new text (T)">Add text</button>
+        <button data-tool="draw" data-needs-doc title="Freehand draw (D)">Draw</button>
+        <button data-tool="highlight" data-needs-doc title="Highlight an area (H)">Highlight</button>
+        <button data-tool="rect" data-needs-doc title="Rectangle (R)">Box</button>
+        <button id="btnImage" data-needs-doc title="Insert a PNG/JPEG image">Image</button>
+        <button id="btnSign" data-needs-doc title="Draw a signature and place it">Signature</button>
+        <input type="file" id="fileImage" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+      </div>
+
+      <div class="group props">
+        <input type="color" id="color" value="#d32f2f" title="Color" />
+        <div class="swatches" id="swatches">
+          <button data-color="#000000" style="--c: #000000" title="Black"></button>
+          <button data-color="#d32f2f" style="--c: #d32f2f" title="Red"></button>
+          <button data-color="#1565c0" style="--c: #1565c0" title="Blue"></button>
+          <button data-color="#ffe600" style="--c: #ffe600" title="Yellow"></button>
+        </div>
+        <label title="Stroke width (pt)">Line <input type="number" id="stroke" min="0.5" max="30" step="0.5" value="2" /></label>
+      </div>
+
+      <div class="group font-group">
+        <select id="fontFamily" title="Font">
+          <option value="sans">Sans (Helvetica)</option>
+          <option value="serif">Serif (Times)</option>
+          <option value="mono">Mono (Courier)</option>
+          <option value="__browse">Browse all fonts…</option>
+          <option value="__load">Load fonts from this computer…</option>
+          <option value="__upload">Upload a font file (.ttf / .otf)…</option>
+        </select>
+        <input type="file" id="fileFont" accept=".ttf,.otf,font/ttf,font/otf" hidden />
+        <button id="fontBrowse" title="Browse fonts with previews">Aa…</button>
+        <button id="bold" class="style-btn" title="Bold"><b>B</b></button>
+        <button id="italic" class="style-btn" title="Italic"><i>I</i></button>
+        <input type="number" id="fontSize" min="4" max="200" value="14" title="Font size (pt)" />
+      </div>
+
+      <div class="group">
+        <button id="zoomOut" data-needs-doc title="Zoom out (Ctrl + −, or Ctrl + mouse wheel)">−</button>
+        <select id="zoomLabel" data-needs-doc title="Zoom">
+          <option value="0.5">50%</option>
+          <option value="0.75">75%</option>
+          <option value="1">100%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+          <option value="3">300%</option>
+          <option value="4">400%</option>
+          <option value="6">600%</option>
+          <option value="width">Fit width</option>
+          <option value="page">Fit page</option>
+        </select>
+        <button id="zoomIn" data-needs-doc title="Zoom in (Ctrl + =, or Ctrl + mouse wheel)">+</button>
+        <button id="zoomFit" data-needs-doc title="Fit page width">Fit</button>
+      </div>
+
+      <div class="group">
+        <button id="btnGrid" data-needs-doc title="Show a grid over the pages (G)">Grid</button>
+        <select id="gridStep" title="Grid spacing">
+          <option value="2">2 mm</option>
+          <option value="5">5 mm</option>
+          <option value="10">10 mm</option>
+          <option value="20">20 mm</option>
+          <option value="25.4">1 inch</option>
+        </select>
+        <button id="gridSnap" title="Snap boxes, text and images to the grid">Snap</button>
+      </div>
+
+      <div class="group">
+        <button id="btnUndo" title="Undo (Ctrl+Z)" disabled>Undo</button>
+        <button id="btnForms" data-needs-doc title="Fill form fields">Forms</button>
+        <button id="btnSplit" data-needs-doc title="Split into several PDFs">Split</button>
+        <button id="btnSave" data-needs-doc class="primary" title="Download the edited PDF (Ctrl+S)">Download</button>
+      </div>
+    </header>
+
+    <main>
+      <aside id="sidebar">
+        <div class="side-actions">
+          <button id="rotL" data-needs-doc title="Rotate selected pages left">⟲</button>
+          <button id="rotR" data-needs-doc title="Rotate selected pages right">⟳</button>
+          <button id="dup" data-needs-doc title="Duplicate selected pages">Copy</button>
+          <button id="blank" data-needs-doc title="Insert a blank page after the current one">Blank</button>
+          <button id="del" data-needs-doc title="Delete selected pages">Delete</button>
+          <button id="extract" data-needs-doc title="Download the selected pages as a new PDF">Extract</button>
+        </div>
+        <div class="hint" id="selHint">Click to select · Ctrl/Shift-click for more · drag to reorder</div>
+        <div id="thumbs"></div>
+      </aside>
+
+      <section id="viewer" class="tool-select">
+        <div id="empty" class="empty">
+          <h1>Edit PDFs in your browser</h1>
+          <p>Drop PDF files here or press <b>Open</b>. Dropping more files later merges them in.</p>
+          <p class="muted">Everything runs locally — your files are never uploaded.</p>
+        </div>
+      </section>
+
+      <aside id="formsPanel" hidden>
+        <div class="panel-head">
+          <b>Form fields</b>
+          <button id="closeForms" title="Close">×</button>
+        </div>
+        <div id="formsBody"></div>
+      </aside>
+    </main>
+
+    <dialog id="signDlg">
+      <form method="dialog">
+        <h2>Draw your signature</h2>
+        <canvas id="signPad" width="560" height="200"></canvas>
+        <div class="dlg-actions">
+          <button type="button" id="signClear">Clear</button>
+          <span class="spacer"></span>
+          <button value="cancel">Cancel</button>
+          <button value="ok" class="primary" id="signUse">Place signature</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="splitDlg">
+      <form method="dialog">
+        <h2>Split PDF</h2>
+        <label class="row"><input type="radio" name="splitMode" value="each" checked /> Every page as its own file</label>
+        <label class="row"><input type="radio" name="splitMode" value="ranges" /> By ranges</label>
+        <input type="text" id="splitRanges" placeholder="e.g. 1-3, 4, 5-8" />
+        <p class="muted">Files are downloaded together as a .zip.</p>
+        <div class="dlg-actions">
+          <span class="spacer"></span>
+          <button value="cancel">Cancel</button>
+          <button value="ok" class="primary">Split</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="fontDlg">
+      <form method="dialog">
+        <div class="font-head">
+          <h2>Fonts</h2>
+          <button value="cancel" title="Close">×</button>
+        </div>
+        <input type="text" id="fontSearch" placeholder="Search fonts, e.g. Muol, Battambang, Moul…" autocomplete="off" />
+        <div id="fontList"></div>
+      </form>
+    </dialog>
+
+    <div id="toast" role="status"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+    <script src="vendor/hb.js"></script>
+    <script src="vendor/hbjs.js"></script>
+    <script type="module">
+      // Legacy Khmer (Limon, ABC…) -> Unicode; GPL-2.0-or-later, see vendor/khmer-unicode-converter/LICENSE
+      import * as KhmerConverter from "./vendor/khmer-unicode-converter/index.js";
+      window.KhmerConverter = KhmerConverter;
+    </script>
+    <script src="app.js?v=10"></script>
+  </body>
+</html>

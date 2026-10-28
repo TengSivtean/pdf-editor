@@ -1,0 +1,1042 @@
+[
+ {
+  "family": "Angkor",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "028-angkor.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "aphireak1",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "030-aphireak1.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Battambang",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "032-battambang-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "033-battambang.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Bayon",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "034-bayon.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Bokor",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "035-bokor.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Chenla",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "039-chenla.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Content",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "040-content-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "041-content.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Dangrek",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "042-dangrek.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Fasthand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "044-fasthand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Freehand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "045-freehand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kantumruy Regular",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "053-kantumruy-regular-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "054-kantumruy-regular.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kantumruy-Regular",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "055-kantumruy-regular.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kdam Thmor",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "057-kdam-thmor.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Battambang",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "058-kh-battambang.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Bokor",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "063-kh-bokor.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Content",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "065-kh-content.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Dangrek",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "066-kh-dangrek.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Fasthand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "068-kh-fasthand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Freehand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "069-kh-freehand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Kangrey",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "075-kh-kangrey.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Koulen",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "078-kh-koulen.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh KoulenL",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "079-kh-koulenl.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Metal Chrieng",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "080-kh-metal-chrieng.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Muol",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "085-kh-muol.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Muol Pali",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "086-kh-muol-pali.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh Siemreap",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "090-kh-siemreap.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Kh System",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "095-kh-system.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "098-khmer.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Beginner",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "102-khmer-beginner.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "103-khmer-busra.ttf",
+    "bold": false,
+    "italic": false
+   },
+   {
+    "file": "104-khmer-busra-i.ttf",
+    "bold": false,
+    "italic": true
+   },
+   {
+    "file": "105-khmer-busra-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "106-khmer-busra-b-i.ttf",
+    "bold": true,
+    "italic": true
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra Bunong",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "107-khmer-busra-bunong.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra diagnostic",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "108-khmer-busra-diagnostic.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra dict",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "109-khmer-busra-dict.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra dot",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "110-khmer-busra-dot.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra high",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "111-khmer-busra-high.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra MOE",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "112-khmer-busra-moe.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Busra xspace",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "113-khmer-busra-xspace.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Element",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "135-khmer-element.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Khao I Dang",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "141-khmer-khao-i-dang.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer M1",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "143-khmer-m1.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer M2",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "144-khmer-m2.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Mondulkiri",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "147-khmer-mondulkiri-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "148-khmer-mondulkiri-b-i.ttf",
+    "bold": true,
+    "italic": true
+   },
+   {
+    "file": "149-khmer-mondulkiri-i.ttf",
+    "bold": false,
+    "italic": true
+   },
+   {
+    "file": "150-khmer-mondulkiri.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Apsara",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "166-khmer-os-apsara.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Battambang",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "167-khmer-os-battambang.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Bokor",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "168-khmer-os-bokor.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Classic",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "169-khmer-os-classic.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Content",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "170-khmer-os-content.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Fasthand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "171-khmer-os-fasthand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Freehand",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "172-khmer-os-freehand.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Kien Svay",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "173-khmer-os-kien-svay.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Metal Chrieng",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "174-khmer-os-metal-chrieng.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Muol",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "175-khmer-os-muol.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Muol Light",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "176-khmer-os-muol-light.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Muol Pali",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "177-khmer-os-muol-pali.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Niroth",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "178-khmer-os-niroth.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Siemreap",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "179-khmer-os-siemreap.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS System",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "180-khmer-os-system.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer OS Wat Phnom",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "181-khmer-os-wat-phnom.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Oureang",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "182-khmer-oureang-b.ttf",
+    "bold": true,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Ratanakiri",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "189-khmer-ratanakiri.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer S1",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "193-khmer-s1.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer S2",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "194-khmer-s2.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer S3",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "195-khmer-s3.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer S4",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "196-khmer-s4.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Samady KS",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "197-khmer-samady-ks.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer Savuth Pen V2",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "201-khmer-savuth-pen-v2.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer SBBIC Serif",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "203-khmer-sbbic-serif.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer-Pen Chantrea",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "222-khmer-pen-chantrea.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Khmer-Pen Teu",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "223-khmer-pen-teu.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "KhmerOS",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "225-khmeros.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Koulen",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "226-koulen.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "KunKhmer",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "227-kunkhmer.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Metal",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "228-metal.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Moul",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "229-moul.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Moul Pali",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "230-moul-pali.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Myanmar Sans Pro",
+  "khmer": false,
+  "faces": [
+   {
+    "file": "231-myanmar-sans-pro.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Nokora Regular",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "239-nokora-regular.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Nokora-Regular",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "240-nokora-regular.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Noto Sans",
+  "khmer": false,
+  "faces": [
+   {
+    "file": "241-noto-sans.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Noto Sans Khmer",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "242-noto-sans-khmer-b.ttf",
+    "bold": true,
+    "italic": false
+   },
+   {
+    "file": "243-noto-sans-khmer.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Noto Sans Khmer UI",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "244-noto-sans-khmer-ui.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "OdorMeanChey",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "245-odormeanchey.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Preah Vihear",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "247-preah-vihear.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Romnea",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "248-romnea-i.ttf",
+    "bold": false,
+    "italic": true
+   }
+  ]
+ },
+ {
+  "family": "Siemreap",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "251-siemreap.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Sithi Manuss",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "252-sithi-manuss.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Suwannaphum",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "253-suwannaphum.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Taprom",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "254-taprom.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Timbre Kampuchea",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "255-timbre-kampuchea.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ },
+ {
+  "family": "Tlok",
+  "khmer": true,
+  "faces": [
+   {
+    "file": "256-tlok.ttf",
+    "bold": false,
+    "italic": false
+   }
+  ]
+ }
+]
