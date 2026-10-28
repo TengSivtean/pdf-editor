@@ -789,7 +789,13 @@ function openTextEditor(p, a, { isNew = false, area = false, caretAt = null } = 
     transform: `rotate(${norm(p.rot - a.rot)}deg)`,
     transformOrigin: "0 0",
   });
-  if (a.cover) ta.style.background = a.cover.color;
+  // Clicking existing PDF text only makes it editable: the original stays on the page exactly as
+  // it was (the editor's own text is invisible, only its caret shows) until the first real change.
+  const untouched = isNew && !!a.removes;
+  if (untouched) {
+    ta.style.color = "transparent";
+    ta.style.caretColor = a.color || "#000";
+  }
   const fit = () => {
     measureCtx.font = fontCss(zoomed, a.font);
     const lines = ta.value.split("\n");
@@ -797,6 +803,12 @@ function openTextEditor(p, a, { isNew = false, area = false, caretAt = null } = 
     ta.style.height = `${lines.length * zoomed * LINE_HEIGHT + 4}px`;
   };
   ta.addEventListener("input", fit);
+  ta.addEventListener("input", () => {
+    if (!editor || editor.dirty || ta.value === editor.original) return;
+    editor.dirty = true; // first real edit: now the original is taken out and the new text shown
+    ta.style.color = a.color;
+    drawOverlay(p.id);
+  });
   ta.addEventListener("keydown", (ev) => {
     ev.stopPropagation();
     if (ev.key === "Enter" && !ev.shiftKey) {
@@ -808,7 +820,7 @@ function openTextEditor(p, a, { isNew = false, area = false, caretAt = null } = 
     }
   });
   ta.addEventListener("blur", () => closeEditor(!editor?.cancel));
-  editor = { p, a, ta, isNew, area, original: a.text, cancel: false };
+  editor = { p, a, ta, isNew, area, original: a.text, cancel: false, dirty: !untouched };
   hoverRun = null;
   v.wrap.append(ta);
   fit();
@@ -1046,15 +1058,14 @@ function sampleColors(p, box) {
   return { bg: hex(bg), fg: top ? hex(top.best) : "#000000" };
 }
 
-// A text annotation that replaces `run`: the original words are removed from the page's content
-// (nothing is painted over them, so map lines and colours behind them stay), and the annotation
-// redraws the text, ready to be edited. If the words can't be found in the content, it falls back
-// to covering them with the background colour.
+// A text annotation for editing `run`. Until the user changes it, the original stays on the page
+// untouched; once changed, the original words are taken out of the page's content (nothing is
+// painted over them, so map lines and colours behind stay) and the annotation draws the new text.
 function replacementFor(p, run) {
   const vp0 = viewport(p, 1, 0); // original text runs along user-space x, i.e. rotation 0
   const [bx, by] = vp0.convertToViewportPoint(run.x, run.base);
   const [x, y] = vp0.convertToPdfPoint(bx, by - run.size * BASELINE);
-  const { bg, fg } = sampleColors(p, run);
+  const { fg } = sampleColors(p, run);
   const a = {
     type: "text",
     id: nid(),
@@ -1066,9 +1077,17 @@ function replacementFor(p, run) {
     color: fg,
     font: fontStyle(run),
     removes: { x0: run.x0, x1: run.x1, base: run.base, size: run.size },
-    fallbackCover: { x0: run.x0, y0: run.y0, x1: run.x1, y1: run.y1, color: bg },
   };
   if (run.legacy) toUnicodeKhmer(a, run);
+  else {
+    // match the original's width, so the caret lands between the right letters and the edited
+    // text keeps the same length on the page
+    const natural = measureText(a, 1).w;
+    const target = run.end - run.x;
+    if (natural > 0 && target > 0) a.size = Math.round(a.size * Math.min(1.25, Math.max(0.8, target / natural)) * 10) / 10;
+  }
+  // the size may have changed: re-anchor so the new text sits on the original baseline
+  [a.x, a.y] = vp0.convertToPdfPoint(bx, by - a.size * BASELINE);
   return a;
 }
 
@@ -1478,7 +1497,8 @@ const pageOverrides = new Map(); // page id -> {key, proxy}
 
 function removalsFor(p) {
   const list = p.annots.filter((a) => a.removes);
-  if (editor?.p.id === p.id && editor.a.removes && !list.includes(editor.a)) list.push(editor.a);
+  // the text being edited is only taken out once the user has actually changed it
+  if (editor?.p.id === p.id && editor.dirty && editor.a.removes && !list.includes(editor.a)) list.push(editor.a);
   return list;
 }
 
@@ -1498,13 +1518,10 @@ function checkRemovals(p) {
       const [pg] = await out.copyPages(lib, [p.index]);
       out.addPage(pg);
       const removed = removeTextRuns(out, pg, annots.map((a) => a.removes));
-      // anything not found in the content (e.g. text inside a form field) is covered instead
-      annots.forEach((a, k) => {
-        if (removed[k]) return;
-        a.cover = a.fallbackCover;
-        delete a.removes;
-        toast("Some of that text couldn't be removed from the page, so it's covered instead.", 4000);
-      });
+      // Never paint a patch over clicked text: if a word can't be found in the content (e.g. text
+      // inside a form field), it stays and the user is told.
+      if (annots.some((a, k) => !removed[k]))
+        toast("Part of the original text couldn't be taken out here, so it stays under your edit.", 5000);
       if (!removed.some(Boolean)) return pageOverrides.get(p.id) === entry && pageOverrides.delete(p.id), drawOverlay(p.id);
       const doc = await pdfjsLib.getDocument({ data: await out.save() }).promise;
       entry.proxy = await doc.getPage(1);
@@ -2417,10 +2434,7 @@ async function buildPdf(pages) {
       extra = fieldText.get(p.index) || [];
       // take edited original text out of the page itself (no cover painted over it)
       const edited = p.annots.filter((a) => a.removes);
-      if (edited.length) {
-        const removed = removeTextRuns(out, page, edited.map((a) => a.removes));
-        edited.forEach((a, k) => removed[k] || extra.push({ ...a, text: "", cover: a.fallbackCover }));
-      }
+      if (edited.length) removeTextRuns(out, page, edited.map((a) => a.removes));
     }
     page.setRotation(degrees(p.rot));
     for (const a of [...extra, ...p.annots]) await drawAnnotPdf(out, page, p, a, kit, imgCache);

@@ -17,7 +17,8 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
 
 ## Features
 
-- **Edit existing text** (Edit text, `E`): hover shows editable lines; click one to retype it. The
+- **Edit existing text** (Edit text, `E`): hover shows editable lines. Clicking one only makes it active —
+  the text stays exactly as it is, with the cursor where you clicked — until you type or delete. Then the
   original words are removed from the page itself — nothing is painted over them, so map lines,
   colours and anything else behind them stay visible. Size, colour and bold/italic/serif style are
   detected from the page. Clearing the text erases it; deleting the edit (select it, `Del`) restores
@@ -67,9 +68,9 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
 
 ## Limits
 
-- Edited text is removed from the file, but only where it's real text. Words inside pictures (scans,
-  maps exported as images) can only be covered with a colour patch, and in the rare case the editor
-  can't locate a word in the page content it falls back to covering it too.
+- Edited text is removed from the file where it is real text. Words inside pictures (scans,
+  maps exported as images) can only be covered with a colour patch (drag a box with Edit text). If the
+  editor ever cannot locate a word, it leaves the original in place and says so — it never paints over it.
 - Other copies of the text (bookmarks, form fields, metadata) are not changed.
 - Text extracted from an existing Khmer PDF is only as good as that PDF's own font mapping.
 - Forms are flattened on download, so the output is no longer fillable.
