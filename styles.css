@@ -142,7 +142,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .page-wrap canvas { position: absolute; left: 0; top: 0; }
 .page-num { position: absolute; bottom: -24px; width: 100%; text-align: center; font-size: 12px; color: var(--muted); }
 .tool-text .ov, .tool-edittext .ov { cursor: text; }
-.tool-draw .ov, .tool-highlight .ov, .tool-rect .ov { cursor: crosshair; }
+.tool-draw .ov, .tool-highlight .ov, .tool-rect .ov, .tool-erase .ov { cursor: crosshair; }
 .placing .ov { cursor: copy !important; }
 
 .text-editor {

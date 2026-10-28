@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PDF Editor</title>
-    <link rel="stylesheet" href="styles.css?v=8" />
+    <link rel="stylesheet" href="styles.css?v=9" />
   </head>
   <body>
     <header class="topbar">
@@ -22,6 +22,7 @@
         <button data-tool="edittext" data-needs-doc title="Click existing text in the PDF to change it (E)">Edit text</button>
         <button data-tool="text" data-needs-doc title="Add new text (T)">Add text</button>
         <button data-tool="draw" data-needs-doc title="Freehand draw (D)">Draw</button>
+        <button data-tool="erase" data-needs-doc title="Eraser: brush over old letters or marks to remove them, using the paper colour (X). Set its size in the Size box.">Eraser</button>
         <button data-tool="highlight" data-needs-doc title="Highlight an area (H)">Highlight</button>
         <button data-tool="rect" data-needs-doc title="Rectangle (R)">Box</button>
         <button id="btnImage" data-needs-doc title="Insert a PNG/JPEG image">Image</button>
@@ -37,7 +38,7 @@
           <button data-color="#1565c0" style="--c: #1565c0" title="Blue"></button>
           <button data-color="#ffe600" style="--c: #ffe600" title="Yellow"></button>
         </div>
-        <label title="Stroke width (pt)">Line <input type="number" id="stroke" min="0.5" max="30" step="0.5" value="2" /></label>
+        <label title="Stroke width (pt)">Line <input type="number" id="stroke" min="0.5" max="80" step="0.5" value="2" /></label>
       </div>
 
       <div class="group font-group">
@@ -178,6 +179,6 @@
       import * as KhmerConverter from "./vendor/khmer-unicode-converter/index.js";
       window.KhmerConverter = KhmerConverter;
     </script>
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=19"></script>
   </body>
 </html>

@@ -23,10 +23,11 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
   colours and anything else behind them stay visible. Size, colour and bold/italic/serif style are
   detected from the page. Clearing the text erases it; deleting the edit (select it, `Del`) restores
   the original.
-- **Text inside images** (scans, maps exported as pictures, labels drawn as shapes): with Edit text,
-  drag a box over the words. The box is filled with the surrounding background color and a text box
-  opens, sized and coloured from the old words and centred where they were. Leave it empty to just
-  erase. Works best on plain backgrounds; on patterns or hatching the cover is a solid color.
+- **Text inside pictures** (scans, maps exported as images): the words are pixels, so they can't be
+  activated like real text. With Edit text, drag a box over them to type new text (sized, coloured
+  and centred from the old words); the picture is never covered. To remove old letters, brush over
+  them with the **Eraser** (`X`), which paints with the paper's own colour only where you brush; set
+  its size in the Size box.
 - **Legacy Khmer fonts** (Limon, ABC, Baidok, Truth…), common in maps and older government documents:
   their text is converted to Unicode when you click it, so you edit real Khmer. The edit is saved as
   Unicode Khmer (the PDF only contains the legacy letters it already used), sized to fit the original
@@ -69,7 +70,7 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
 ## Limits
 
 - Edited text is removed from the file where it is real text. Words inside pictures (scans,
-  maps exported as images) can only be covered with a colour patch (drag a box with Edit text). If the
+  maps exported as images) can only be removed by hand with the Eraser. If the
   editor ever cannot locate a word, it leaves the original in place and says so — it never paints over it.
 - Other copies of the text (bookmarks, form fields, metadata) are not changed.
 - Text extracted from an existing Khmer PDF is only as good as that PDF's own font mapping.

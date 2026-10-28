@@ -38,6 +38,7 @@ const state = {
   tool: "select",
   color: "#d32f2f",
   stroke: 2,
+  eraserSize: 12, // pt
   fontSize: 14,
   font: { family: "sans", bold: false, italic: false }, // custom fonts add {family: "custom", name}
   grid: { show: false, snap: false, step: 10 }, // step in millimetres
@@ -675,22 +676,36 @@ function onDown(e, id) {
     if (run) return openTextEditor(p, replacementFor(p, run), { isNew: true, caretAt: pt });
     if (p.src >= 0 && runCache.get(`${p.src}:${p.index}`) === null)
       return toast("Still reading this page's text — try again in a moment.");
-    // No real text here (an image, a scan, or text drawn as shapes): drag a box over the words to
-    // cover them and type replacement text.
+    // No real text here (a picture, a scan, or text drawn as shapes): drag a box over the words to
+    // type new text there. The picture itself is never covered.
     capture(e);
     const [x, y] = vp.convertToPdfPoint(...snapPoint(pt));
     draft = { pageId: id, annot: { type: "area", id: nid(), x0: x, y0: y, x1: x, y1: y } };
-    if (!runsFor(p).length) toast("This page has no text layer — drag a box over the words to replace them.", 3500);
+    if (!runsFor(p).length)
+      toast("This page is a picture, so its words can't be edited directly. Drag a box to type new text; use the Eraser to remove old letters yourself.", 6000);
     return;
   }
 
   capture(e);
-  const P = vp.convertToPdfPoint(...(state.tool === "draw" ? pt : snapPoint(pt)));
+  const freehand = state.tool === "draw" || state.tool === "erase";
+  const P = vp.convertToPdfPoint(...(freehand ? pt : snapPoint(pt)));
   const base = { id: nid(), color: state.color, width: state.stroke };
-  draft =
-    state.tool === "draw"
-      ? { pageId: id, annot: { ...base, type: "ink", pts: [P] } }
-      : { pageId: id, annot: { ...base, type: state.tool, x0: P[0], y0: P[1], x1: P[0], y1: P[1] } };
+  if (state.tool === "erase") {
+    // the eraser paints with the paper's own colour, taken from where each stroke starts
+    Object.assign(base, { color: pixelColor(id, pt), width: state.eraserSize, erase: true });
+  }
+  draft = freehand
+    ? { pageId: id, annot: { ...base, type: "ink", pts: [P] } }
+    : { pageId: id, annot: { ...base, type: state.tool, x0: P[0], y0: P[1], x1: P[0], y1: P[1] } };
+}
+
+// Colour of the rendered page at a view point (white if the page hasn't painted yet).
+function pixelColor(id, [x, y]) {
+  const v = views.get(id);
+  if (!v?.rendered) return "#ffffff";
+  const r = dpr();
+  const [R, G, B] = v.pc.getContext("2d").getImageData(Math.floor(x * r), Math.floor(y * r), 1, 1).data;
+  return `#${[R, G, B].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function onMove(e, id) {
@@ -871,7 +886,7 @@ function closeEditor(save) {
   const text = ta.value.replace(/\s+$/, "");
   // Replaced PDF text keeps its cover even when emptied, which erases the original.
   // A dragged area is kept even when left empty: covering the old words is the edit.
-  if (save && pageById(p.id) && (text !== original || area)) {
+  if (save && pageById(p.id) && text !== original) {
     snapshot();
     if (text || a.cover || a.removes) {
       a.text = text;
@@ -1578,8 +1593,8 @@ function inkBox(p, b, bgHex) {
   return { x: (x + x0) / r, y: (y + y0) / r, w: (x1 - x0 + 1) / r, h: (y1 - y0 + 1) / r };
 }
 
-// Replacement text for a box dragged over words that aren't real text (images, scans, outlines):
-// the box is covered with its background color and the new text is sized to fit its height.
+// New text for a box dragged over words that aren't real text (images, scans, outlines), sized,
+// coloured and centred from the old words' ink. Nothing is painted over the picture.
 function areaReplacement(p, area, b) {
   const vp = viewport(p, state.zoom);
   const cover = {};
@@ -1602,7 +1617,8 @@ function areaReplacement(p, area, b) {
     size,
     color: fg,
     font: { ...state.font },
-    cover: { ...cover, color: bg },
+    // No cover: the picture is left exactly as it is. Old letters are removed only if the user
+    // brushes them away with the Eraser.
   };
 }
 
@@ -2520,6 +2536,9 @@ function setTool(t) {
   $("#viewer").className = `tool-${t}`;
   if (t !== "select") select(null);
   if (t === "highlight" && state.color === "#d32f2f") setColor("#ffe600");
+  // the Line box sets the eraser's size while the Eraser is active
+  $("#stroke").value = t === "erase" ? state.eraserSize : state.stroke;
+  $("#stroke").closest("label").firstChild.textContent = t === "erase" ? "Size " : "Line ";
 }
 
 function setColor(c) {
@@ -2765,7 +2784,9 @@ document.querySelectorAll("#swatches button").forEach((b) => b.addEventListener(
 $("#color").addEventListener("input", (e) => setColor(e.target.value));
 $("#stroke").addEventListener("input", (e) => {
   const v = Number(e.target.value);
-  if (v > 0) (state.stroke = v), applyToSelected("width", v);
+  if (!(v > 0)) return;
+  if (state.tool === "erase") state.eraserSize = v;
+  else (state.stroke = v), applyToSelected("width", v);
 });
 $("#fontSize").addEventListener("input", (e) => {
   const v = Number(e.target.value);
@@ -2855,7 +2876,7 @@ document.addEventListener("keydown", (e) => {
     return drawOverlay(p.id);
   }
   if (e.key === "Escape") return cancelPlacing(), select(null);
-  const tools = { v: "select", t: "text", e: "edittext", d: "draw", h: "highlight", r: "rect" };
+  const tools = { v: "select", t: "text", e: "edittext", d: "draw", h: "highlight", r: "rect", x: "erase" };
   if (tools[k] && state.pages.length) setTool(tools[k]);
 });
 
