@@ -262,7 +262,9 @@ async function renderPage(id) {
   ctx.fillRect(0, 0, v.pc.width, v.pc.height);
   if (p.src < 0) return;
   try {
-    v.task = state.sources[p.src].proxies[p.index].render({
+    // a page whose original text was edited renders from its copy without that text
+    const proxy = pageOverrides.get(id)?.proxy || state.sources[p.src].proxies[p.index];
+    v.task = proxy.render({
       canvasContext: ctx,
       viewport: viewport(p, state.zoom * dpr()),
     });
@@ -562,6 +564,7 @@ function drawOverlay(id) {
       ctx.fillRect(b.x + b.w - 4, b.y + b.h - 4, 9, 9);
     }
   }
+  checkRemovals(p); // keep the rendered page in step with which original text is removed
 }
 
 const redrawAll = () => state.pages.forEach((p) => drawOverlay(p.id));
@@ -858,7 +861,7 @@ function closeEditor(save) {
   // A dragged area is kept even when left empty: covering the old words is the edit.
   if (save && pageById(p.id) && (text !== original || area)) {
     snapshot();
-    if (text || a.cover) {
+    if (text || a.cover || a.removes) {
       a.text = text;
       if (a.center && text) {
         // keep replacement text centred where the old words were
@@ -1043,7 +1046,10 @@ function sampleColors(p, box) {
   return { bg: hex(bg), fg: top ? hex(top.best) : "#000000" };
 }
 
-// A text annotation that covers `run` and redraws it, ready to be edited.
+// A text annotation that replaces `run`: the original words are removed from the page's content
+// (nothing is painted over them, so map lines and colours behind them stay), and the annotation
+// redraws the text, ready to be edited. If the words can't be found in the content, it falls back
+// to covering them with the background colour.
 function replacementFor(p, run) {
   const vp0 = viewport(p, 1, 0); // original text runs along user-space x, i.e. rotation 0
   const [bx, by] = vp0.convertToViewportPoint(run.x, run.base);
@@ -1059,10 +1065,473 @@ function replacementFor(p, run) {
     size: Math.round(run.size * 100) / 100,
     color: fg,
     font: fontStyle(run),
-    cover: { x0: run.x0, y0: run.y0, x1: run.x1, y1: run.y1, color: bg },
+    removes: { x0: run.x0, x1: run.x1, base: run.base, size: run.size },
+    fallbackCover: { x0: run.x0, y0: run.y0, x1: run.x1, y1: run.y1, color: bg },
   };
   if (run.legacy) toUnicodeKhmer(a, run);
   return a;
+}
+
+// ---------- removing original text from page content ----------
+//
+// Finds the text-showing operators (Tj, TJ, ', ") whose glyphs make up a run, by replaying the
+// page's text positioning with the fonts' real widths, and swaps each for an invisible spacer
+// ([-n] TJ) of the same advance, so everything after it on the line stays exactly where it was.
+// Text inside Form XObjects (common in exported maps) is handled the same way.
+
+const PDF_WS = new Set([0, 9, 10, 12, 13, 32]);
+const PDF_DELIM = new Set([40, 41, 60, 62, 91, 93, 123, 125, 47, 37]);
+
+// Calls onOp(op, operands, start, end) for every operator in a content stream (bytes).
+function parseContent(b, onOp) {
+  const n = b.length;
+  let i = 0;
+  const skipWs = () => {
+    while (i < n) {
+      if (PDF_WS.has(b[i])) i++;
+      else if (b[i] === 37) while (i < n && b[i] !== 10 && b[i] !== 13) i++;
+      else break;
+    }
+  };
+  const readToken = () => {
+    const c = b[i];
+    if (c === 40) {
+      // literal string, with nesting and escapes
+      const out = [];
+      let depth = 1;
+      i++;
+      while (i < n && depth) {
+        let ch = b[i++];
+        if (ch === 92) {
+          const e = b[i++];
+          const map = { 110: 10, 114: 13, 116: 9, 98: 8, 102: 12 };
+          if (map[e] !== undefined) out.push(map[e]);
+          else if (e >= 48 && e <= 55) {
+            let v = e - 48;
+            for (let k = 0; k < 2 && b[i] >= 48 && b[i] <= 55; k++) v = v * 8 + (b[i++] - 48);
+            out.push(v & 255);
+          } else if (e === 13) {
+            if (b[i] === 10) i++;
+          } else if (e !== 10) out.push(e);
+          continue;
+        }
+        if (ch === 40) depth++;
+        else if (ch === 41 && !--depth) break;
+        out.push(ch);
+      }
+      return { t: "str", v: out };
+    }
+    if (c === 60 && b[i + 1] === 60) return (i += 2), { t: "<<" };
+    if (c === 62 && b[i + 1] === 62) return (i += 2), { t: ">>" };
+    if (c === 60) {
+      let hex = "";
+      i++;
+      while (i < n && b[i] !== 62) {
+        if (!PDF_WS.has(b[i])) hex += String.fromCharCode(b[i]);
+        i++;
+      }
+      i++;
+      if (hex.length % 2) hex += "0";
+      const out = [];
+      for (let k = 0; k < hex.length; k += 2) out.push(parseInt(hex.slice(k, k + 2), 16));
+      return { t: "str", v: out };
+    }
+    if (c === 91 || c === 93 || c === 123 || c === 125) return i++, { t: String.fromCharCode(c) };
+    let s = i;
+    if (c === 47) i++;
+    while (i < n && !PDF_WS.has(b[i]) && !PDF_DELIM.has(b[i])) i++;
+    if (i === s) i++; // stray delimiter
+    const word = String.fromCharCode(...b.subarray(c === 47 ? s + 1 : s, i));
+    if (c === 47) return { t: "name", v: word.replace(/#([0-9a-fA-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16))) };
+    if (/^[+-]?(\d+\.?\d*|\.\d+)$/.test(word)) return { t: "num", v: parseFloat(word) };
+    return { t: "op", v: word };
+  };
+  const readValue = (tok) => {
+    if (tok.t === "[") {
+      const arr = [];
+      for (;;) {
+        skipWs();
+        if (i >= n) return arr;
+        const t = readToken();
+        if (t.t === "]") return arr;
+        arr.push(readValue(t));
+      }
+    }
+    if (tok.t === "<<") {
+      const dict = {};
+      for (;;) {
+        skipWs();
+        if (i >= n) return dict;
+        const k = readToken();
+        if (k.t === ">>") return dict;
+        skipWs();
+        dict[k.v] = readValue(readToken());
+      }
+    }
+    return tok.t === "op" ? tok.v : tok.v; // true/false/null come through as words
+  };
+  let stack = [];
+  let start = -1;
+  for (;;) {
+    skipWs();
+    if (i >= n) break;
+    const s = i;
+    const tok = readToken();
+    if (tok.t === "op" && !["true", "false", "null"].includes(tok.v)) {
+      if (tok.v === "BI") {
+        // inline image: skip its binary data up to a whitespace-delimited EI
+        while (i < n) {
+          skipWs();
+          const t = readToken();
+          if (t.t === "op" && t.v === "ID") break;
+        }
+        i++;
+        while (i < n && !(b[i] === 69 && b[i + 1] === 73 && PDF_WS.has(b[i - 1]) && (i + 2 >= n || PDF_WS.has(b[i + 2])))) i++;
+        i += 2;
+        stack = [];
+        start = -1;
+        continue;
+      }
+      onOp(tok.v, stack, start < 0 ? s : start, i);
+      stack = [];
+      start = -1;
+    } else {
+      if (start < 0) start = s;
+      stack.push(readValue(tok));
+    }
+  }
+}
+
+const matMul = (m, k) => [
+  m[0] * k[0] + m[1] * k[2],
+  m[0] * k[1] + m[1] * k[3],
+  m[2] * k[0] + m[3] * k[2],
+  m[2] * k[1] + m[3] * k[3],
+  m[4] * k[0] + m[5] * k[2] + k[4],
+  m[4] * k[1] + m[5] * k[3] + k[5],
+];
+
+// Glyph widths (text-space units per 1 unit of font size) for a font resource.
+function fontMetrics(resources, name) {
+  const { PDFName, PDFDict, PDFArray, PDFNumber } = PDFLib;
+  const num = (o) => (o instanceof PDFNumber ? o.asNumber() : undefined);
+  const font = resources?.lookup(PDFName.of("Font"))?.lookup?.(PDFName.of(name));
+  const fallback = { twoByte: false, width: () => 0.5 };
+  if (!(font instanceof PDFDict)) return fallback;
+  const subtype = font.get(PDFName.of("Subtype"))?.toString();
+  if (subtype === "/Type0") {
+    const desc = font.lookup(PDFName.of("DescendantFonts"));
+    const cid = desc instanceof PDFArray ? desc.lookup(0) : null;
+    if (!(cid instanceof PDFDict)) return { twoByte: true, width: () => 1 };
+    const dw = num(cid.lookup(PDFName.of("DW"))) ?? 1000;
+    const widths = new Map();
+    const W = cid.lookup(PDFName.of("W"));
+    if (W instanceof PDFArray) {
+      const items = W.asArray().map((o) => cid.context.lookup(o));
+      for (let k = 0; k < items.length; ) {
+        const first = num(items[k]);
+        if (items[k + 1] instanceof PDFArray) {
+          items[k + 1].asArray().forEach((w, j) => widths.set(first + j, num(cid.context.lookup(w)) ?? dw));
+          k += 2;
+        } else {
+          const last = num(items[k + 1]);
+          const w = num(items[k + 2]) ?? dw;
+          for (let c = first; c <= last && c - first < 65536; c++) widths.set(c, w);
+          k += 3;
+        }
+      }
+    }
+    return { twoByte: true, width: (code) => (widths.get(code) ?? dw) / 1000 };
+  }
+  const first = num(font.lookup(PDFName.of("FirstChar"))) ?? 0;
+  const Wd = font.lookup(PDFName.of("Widths"));
+  const list = Wd instanceof PDFArray ? Wd.asArray().map((o) => num(font.context.lookup(o)) ?? 0) : null;
+  const fm = font.lookup(PDFName.of("FontMatrix"));
+  const scale = fm instanceof PDFArray ? num(fm.lookup(0)) ?? 0.001 : 0.001; // Type3 glyph space
+  const missing = num(font.lookup(PDFName.of("FontDescriptor"))?.lookup?.(PDFName.of("MissingWidth"))) ?? 500;
+  if (!list) {
+    // The standard 14 fonts may omit Widths; use their built-in metrics (WinAnsi codes).
+    const base = font.get(PDFName.of("BaseFont"))?.decodeText?.().replace(/^[A-Z]{6}\+/, "");
+    if (!Object.values(StandardFonts).includes(base)) return fallback;
+    const std = PDFLib.StandardFontEmbedder.for(base);
+    const cache = new Map();
+    return {
+      twoByte: false,
+      width: (code) => {
+        if (!cache.has(code)) {
+          let w = 0.5;
+          try {
+            w = std.widthOfTextAtSize(String.fromCharCode(code), 1);
+          } catch {
+            // code outside the font's encoding
+          }
+          cache.set(code, w);
+        }
+        return cache.get(code);
+      },
+    };
+  }
+  return { twoByte: false, width: (code) => (list[code - first] ?? missing) * scale };
+}
+
+// Rewrites one content stream; returns {bytes, removed[]} (removed count per run).
+function stripRunsFromContent(doc, bytes, resources, ctm0, runs, depth) {
+  const { PDFName, PDFRawStream, PDFDict } = PDFLib;
+  const removed = runs.map(() => 0);
+  const edits = []; // [start, end, replacement]
+  const fonts = new Map();
+  let gs = { ctm: ctm0, font: null, size: 0, Tc: 0, Tw: 0, Th: 1, TL: 0 };
+  const stack = [];
+  let Tm = [1, 0, 0, 1, 0, 0];
+  let Tlm = Tm;
+  const metrics = (name) => {
+    if (!fonts.has(name)) fonts.set(name, fontMetrics(resources, name));
+    return fonts.get(name);
+  };
+  const nextLine = () => {
+    Tlm = matMul([1, 0, 0, 1, 0, -gs.TL], Tlm);
+    Tm = Tlm;
+  };
+  const hex = (bytes) => `<${[...bytes].map((x) => x.toString(16).padStart(2, "0")).join("")}>`;
+  // Shows a string/TJ array. Glyphs whose origin falls inside a run are dropped, each replaced by
+  // a spacer of exactly its advance, so a command that also draws neighbouring words (e.g. a date
+  // line with blanks) keeps those words where they were.
+  const show = (items, start, end, prefix) => {
+    const m = matMul(Tm, gs.ctm);
+    const [ox, oy] = [m[4], m[5]];
+    const scaleX = Math.hypot(m[0], m[1]);
+    const size = gs.size * Math.hypot(m[2], m[3]);
+    const horizontal = Math.abs(m[1]) < 0.01 * Math.abs(m[0]) && m[0] > 0;
+    // runs this command's baseline and size could belong to
+    const candidates = horizontal
+      ? runs
+          .map((r, k) => [r, k])
+          .filter(([r]) => Math.abs(oy - r.base) <= r.size * 0.35 && Math.abs(size - r.size) <= r.size * 0.35)
+      : [];
+    const f = gs.font ? metrics(gs.font) : { twoByte: false, width: () => 0.5 };
+    const toNum = (adv) => (gs.size && gs.Th ? (-adv * 1000) / (gs.size * gs.Th) : 0);
+    const out = []; // rebuilt TJ elements: byte arrays and numbers
+    let tx = 0;
+    let dropped = 0;
+    for (const it of items) {
+      if (typeof it === "number") {
+        out.push(it);
+        tx += (-it / 1000) * gs.size * gs.Th;
+        continue;
+      }
+      let keep = [];
+      for (let k = 0; k < it.length; k += f.twoByte ? 2 : 1) {
+        const code = f.twoByte ? (it[k] << 8) | (it[k + 1] ?? 0) : it[k];
+        const adv = (f.width(code) * gs.size + gs.Tc + (!f.twoByte && code === 32 ? gs.Tw : 0)) * gs.Th;
+        const gx = ox + tx * scaleX;
+        const hit = candidates.find(([r]) => gx >= r.x0 - r.size * 0.15 && gx < r.x1 - r.size * 0.05);
+        if (hit) {
+          removed[hit[1]]++;
+          dropped++;
+          if (keep.length) out.push(keep), (keep = []);
+          out.push(toNum(adv));
+        } else {
+          keep.push(...it.subarray?.(k, k + (f.twoByte ? 2 : 1)) ?? it.slice(k, k + (f.twoByte ? 2 : 1)));
+        }
+        tx += adv;
+      }
+      if (keep.length) out.push(keep);
+    }
+    if (dropped) {
+      const body = out.map((e) => (typeof e === "number" ? e.toFixed(3) : hex(e))).join(" ");
+      edits.push([start, end, `${prefix}[${body}] TJ`]);
+    }
+    Tm = matMul([1, 0, 0, 1, tx, 0], Tm);
+  };
+  parseContent(bytes, (op, a, start, end) => {
+    switch (op) {
+      case "q":
+        stack.push({ ...gs });
+        break;
+      case "Q":
+        if (stack.length) gs = stack.pop();
+        break;
+      case "cm":
+        if (a.length === 6) gs.ctm = matMul(a, gs.ctm);
+        break;
+      case "BT":
+        Tm = Tlm = [1, 0, 0, 1, 0, 0];
+        break;
+      case "Tf":
+        [gs.font, gs.size] = [a[0], a[1]];
+        break;
+      case "Tc":
+        gs.Tc = a[0];
+        break;
+      case "Tw":
+        gs.Tw = a[0];
+        break;
+      case "Tz":
+        gs.Th = a[0] / 100;
+        break;
+      case "TL":
+        gs.TL = a[0];
+        break;
+      case "Td":
+        Tlm = matMul([1, 0, 0, 1, a[0], a[1]], Tlm);
+        Tm = Tlm;
+        break;
+      case "TD":
+        gs.TL = -a[1];
+        Tlm = matMul([1, 0, 0, 1, a[0], a[1]], Tlm);
+        Tm = Tlm;
+        break;
+      case "Tm":
+        Tm = Tlm = a.slice(0, 6);
+        break;
+      case "T*":
+        nextLine();
+        break;
+      case "Tj":
+        show([a[0] || []], start, end, "");
+        break;
+      case "TJ":
+        show((a[0] || []).map((x) => (Array.isArray(x) ? x : Number(x))), start, end, "");
+        break;
+      case "'":
+        nextLine();
+        show([a[0] || []], start, end, "T* ");
+        break;
+      case '"':
+        gs.Tw = a[0];
+        gs.Tc = a[1];
+        nextLine();
+        show([a[2] || []], start, end, `${a[0]} Tw ${a[1]} Tc T* `);
+        break;
+      case "Do": {
+        if (depth > 6) break;
+        const xobjs = resources?.lookup(PDFName.of("XObject"));
+        const ref = xobjs?.get?.(PDFName.of(a[0]));
+        const form = ref && doc.context.lookup(ref);
+        if (!(form instanceof PDFRawStream) || form.dict.get(PDFName.of("Subtype"))?.toString() !== "/Form") break;
+        const mtx = form.dict.lookup(PDFName.of("Matrix"));
+        const fm = mtx ? mtx.asArray().map((o) => doc.context.lookup(o).asNumber()) : [1, 0, 0, 1, 0, 0];
+        const res = form.dict.lookup(PDFName.of("Resources"));
+        const sub = stripRunsFromContent(
+          doc,
+          PDFLib.decodePDFRawStream(form).decode(),
+          res instanceof PDFDict ? res : resources,
+          matMul(fm, gs.ctm),
+          runs,
+          depth + 1
+        );
+        sub.removed.forEach((c, k) => (removed[k] += c));
+        if (sub.removed.some(Boolean)) replaceStream(doc, ref, form, sub.bytes);
+        break;
+      }
+    }
+  });
+  if (!edits.length) return { bytes, removed };
+  const parts = [];
+  let at = 0;
+  for (const [s, e, rep] of edits.sort((x, y) => x[0] - y[0])) {
+    parts.push(bytes.subarray(at, s), new TextEncoder().encode(rep));
+    at = e;
+  }
+  parts.push(bytes.subarray(at));
+  const out = new Uint8Array(parts.reduce((len, p) => len + p.length, 0));
+  let o = 0;
+  for (const p of parts) out.set(p, (o += p.length) - p.length);
+  return { bytes: out, removed };
+}
+
+// Replaces a stream object's data, keeping its dictionary entries except the encoding ones.
+function replaceStream(doc, ref, old, bytes) {
+  const { PDFName } = PDFLib;
+  const keep = {};
+  for (const [k, v] of old.dict.entries()) {
+    if (!["/Filter", "/DecodeParms", "/Length"].includes(k.toString())) keep[k.decodeText()] = v;
+  }
+  doc.context.assign(ref, doc.context.flateStream(bytes, keep));
+}
+
+// Removes the given runs ({x0, x1, base, size} in user space) from a page of `doc`.
+// Returns how many text operators were removed for each run.
+function removeTextRuns(doc, page, runs) {
+  const { PDFName, PDFArray, PDFRawStream } = PDFLib;
+  const node = page.node;
+  const contents = node.get(PDFName.of("Contents"));
+  const refs = contents instanceof PDFArray ? contents.asArray() : contents ? [contents] : [];
+  const streams = refs.map((r) => doc.context.lookup(r)).filter((s) => s instanceof PDFRawStream);
+  if (!streams.length) return runs.map(() => 0);
+  const joined = streams.map((s) => PDFLib.decodePDFRawStream(s).decode());
+  const all = new Uint8Array(joined.reduce((n, b) => n + b.length + 1, 0));
+  let o = 0;
+  for (const b of joined) {
+    all.set(b, o);
+    all[o + b.length] = 10; // streams are concatenated with whitespace between them
+    o += b.length + 1;
+  }
+  const { bytes, removed } = stripRunsFromContent(doc, all, node.Resources(), [1, 0, 0, 1, 0, 0], runs, 0);
+  if (bytes !== all) node.set(PDFName.of("Contents"), doc.context.register(doc.context.flateStream(bytes)));
+  return removed;
+}
+
+// Preview: a page with removed runs is re-rendered from a one-page copy without that text.
+const sourceLibs = new Map(); // src id -> Promise<PDFDocument>
+const pageOverrides = new Map(); // page id -> {key, proxy}
+
+function removalsFor(p) {
+  const list = p.annots.filter((a) => a.removes);
+  if (editor?.p.id === p.id && editor.a.removes && !list.includes(editor.a)) list.push(editor.a);
+  return list;
+}
+
+function checkRemovals(p) {
+  if (!p || p.src < 0) return;
+  const annots = removalsFor(p);
+  const key = annots.map((a) => `${a.removes.x0.toFixed(1)}:${a.removes.base.toFixed(1)}`).sort().join("|");
+  if ((pageOverrides.get(p.id)?.key ?? "") === key) return;
+  const entry = { key, proxy: null };
+  pageOverrides.set(p.id, entry);
+  (async () => {
+    if (annots.length) {
+      if (!sourceLibs.has(p.src))
+        sourceLibs.set(p.src, PDFDocument.load(state.sources[p.src].bytes, { ignoreEncryption: true }));
+      const lib = await sourceLibs.get(p.src);
+      const out = await PDFDocument.create();
+      const [pg] = await out.copyPages(lib, [p.index]);
+      out.addPage(pg);
+      const removed = removeTextRuns(out, pg, annots.map((a) => a.removes));
+      // anything not found in the content (e.g. text inside a form field) is covered instead
+      annots.forEach((a, k) => {
+        if (removed[k]) return;
+        a.cover = a.fallbackCover;
+        delete a.removes;
+        toast("Some of that text couldn't be removed from the page, so it's covered instead.", 4000);
+      });
+      if (!removed.some(Boolean)) return pageOverrides.get(p.id) === entry && pageOverrides.delete(p.id), drawOverlay(p.id);
+      const doc = await pdfjsLib.getDocument({ data: await out.save() }).promise;
+      entry.proxy = await doc.getPage(1);
+    }
+    if (pageOverrides.get(p.id) !== entry) return; // superseded by a newer change
+    await rerenderPage(p.id);
+  })().catch((e) => console.error("Text removal failed", e));
+}
+
+// Re-renders a page into a fresh canvas (so it never collides with a render in progress).
+async function rerenderPage(id) {
+  const v = views.get(id);
+  const p = pageById(id);
+  if (!v || !p) return;
+  const proxy = pageOverrides.get(id)?.proxy || state.sources[p.src].proxies[p.index];
+  const c = document.createElement("canvas");
+  Object.assign(c, { width: v.pc.width, height: v.pc.height, className: "pdf" });
+  c.style.cssText = v.pc.style.cssText;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, c.width, c.height);
+  await proxy.render({ canvasContext: ctx, viewport: viewport(p, state.zoom * dpr()) }).promise;
+  if (views.get(id) !== v) return; // the viewer was rebuilt meanwhile
+  v.task?.cancel();
+  v.pc.replaceWith(c);
+  v.pc = c;
+  v.rendered = true;
 }
 
 // View-space bounds of everything inside box `b` that differs clearly from the background.
@@ -1946,6 +2415,12 @@ async function buildPdf(pages) {
       [page] = await out.copyPages(lib, [p.index]);
       out.addPage(page);
       extra = fieldText.get(p.index) || [];
+      // take edited original text out of the page itself (no cover painted over it)
+      const edited = p.annots.filter((a) => a.removes);
+      if (edited.length) {
+        const removed = removeTextRuns(out, page, edited.map((a) => a.removes));
+        edited.forEach((a, k) => removed[k] || extra.push({ ...a, text: "", cover: a.fallbackCover }));
+      }
     }
     page.setRotation(degrees(p.rot));
     for (const a of [...extra, ...p.annots]) await drawAnnotPdf(out, page, p, a, kit, imgCache);

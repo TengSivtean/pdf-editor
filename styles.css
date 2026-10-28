@@ -152,7 +152,7 @@ main { flex: 1; display: flex; min-height: 0; }
   padding: 0;
   border: none;
   outline: 1px dashed var(--sel);
-  background: rgba(255, 255, 255, 0.55);
+  background: transparent; /* never tint what is underneath while typing */
   resize: none;
   overflow: hidden;
   white-space: pre;

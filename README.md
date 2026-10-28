@@ -17,9 +17,11 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
 
 ## Features
 
-- **Edit existing text** (Edit text, `E`): hover shows editable lines; click one to retype it. The size,
-  color, background and bold/italic/serif style are detected from the page. Clearing the text erases
-  it; deleting the edit (select it, `Del`) restores the original.
+- **Edit existing text** (Edit text, `E`): hover shows editable lines; click one to retype it. The
+  original words are removed from the page itself — nothing is painted over them, so map lines,
+  colours and anything else behind them stay visible. Size, colour and bold/italic/serif style are
+  detected from the page. Clearing the text erases it; deleting the edit (select it, `Del`) restores
+  the original.
 - **Text inside images** (scans, maps exported as pictures, labels drawn as shapes): with Edit text,
   drag a box over the words. The box is filled with the surrounding background color and a text box
   opens, sized and coloured from the old words and centred where they were. Leave it empty to just
@@ -65,9 +67,10 @@ Then open http://localhost:8765 in Chrome or Edge (needed for "Load fonts from t
 
 ## Limits
 
-- **Edit text covers rather than deletes.** The original words stay in the file underneath the cover,
-  so they can still be found by search or copy. Don't rely on it to remove confidential text.
-- Editing works on real text only; scanned pages are images (use Add text over them).
+- Edited text is removed from the file, but only where it's real text. Words inside pictures (scans,
+  maps exported as images) can only be covered with a colour patch, and in the rare case the editor
+  can't locate a word in the page content it falls back to covering it too.
+- Other copies of the text (bookmarks, form fields, metadata) are not changed.
 - Text extracted from an existing Khmer PDF is only as good as that PDF's own font mapping.
 - Forms are flattened on download, so the output is no longer fillable.
 - Password-protected PDFs can't be opened.
