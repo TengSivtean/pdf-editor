@@ -677,12 +677,12 @@ function onDown(e, id) {
     if (p.src >= 0 && runCache.get(`${p.src}:${p.index}`) === null)
       return toast("Still reading this page's text — try again in a moment.");
     // No real text here (a picture, a scan, or text drawn as shapes): drag a box over the words to
-    // type new text there. The picture itself is never covered.
+    // delete them (filled with the paper's colour) and type new text there.
     capture(e);
     const [x, y] = vp.convertToPdfPoint(...snapPoint(pt));
     draft = { pageId: id, annot: { type: "area", id: nid(), x0: x, y0: y, x1: x, y1: y } };
     if (!runsFor(p).length)
-      toast("This page is a picture, so its words can't be edited directly. Drag a box to type new text; use the Eraser to remove old letters yourself.", 6000);
+      toast("This page is a picture (scan): drag a box over the words to delete them and type new text.", 5000);
     return;
   }
 
@@ -886,7 +886,8 @@ function closeEditor(save) {
   const text = ta.value.replace(/\s+$/, "");
   // Replaced PDF text keeps its cover even when emptied, which erases the original.
   // A dragged area is kept even when left empty: covering the old words is the edit.
-  if (save && pageById(p.id) && text !== original) {
+  // A dragged box is kept even when left empty: deleting the old words there is the edit.
+  if (save && pageById(p.id) && (text !== original || area)) {
     snapshot();
     if (text || a.cover || a.removes) {
       a.text = text;
@@ -1593,8 +1594,9 @@ function inkBox(p, b, bgHex) {
   return { x: (x + x0) / r, y: (y + y0) / r, w: (x1 - x0 + 1) / r, h: (y1 - y0 + 1) / r };
 }
 
-// New text for a box dragged over words that aren't real text (images, scans, outlines), sized,
-// coloured and centred from the old words' ink. Nothing is painted over the picture.
+// Replacement for a box dragged over words that aren't real text (images, scans, outlines): the
+// box is filled with the paper's colour, which deletes the old words there, and new text is sized,
+// coloured and centred from the old words' ink. (Real text is never covered; it's edited in place.)
 function areaReplacement(p, area, b) {
   const vp = viewport(p, state.zoom);
   const cover = {};
@@ -1617,8 +1619,7 @@ function areaReplacement(p, area, b) {
     size,
     color: fg,
     font: { ...state.font },
-    // No cover: the picture is left exactly as it is. Old letters are removed only if the user
-    // brushes them away with the Eraser.
+    cover: { ...cover, color: bg },
   };
 }
 
